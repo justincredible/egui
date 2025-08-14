@@ -41,25 +41,40 @@ impl crate::View for LayoutTest {
     fn ui(&mut self, ui: &mut Ui) {
         ui.label("Tests and demonstrates the limits of the egui layouts");
         self.content_ui(ui);
-        Resize::default()
-            .default_size([150.0, 200.0])
-            .max_size([300.0, 400.0])
-            .show(ui, |ui| {
-                if self.layout.main_wrap {
-                    if self.layout.main_dir.is_horizontal() {
-                        ui.allocate_ui(
-                            vec2(ui.available_size_before_wrap().x, self.wrap_row_height),
-                            |ui| ui.with_layout(self.layout, demo_ui),
-                        );
-                    } else {
-                        ui.allocate_ui(
-                            vec2(self.wrap_column_width, ui.available_size_before_wrap().y),
-                            |ui| ui.with_layout(self.layout, demo_ui),
-                        );
-                    }
-                } else {
-                    ui.with_layout(self.layout, demo_ui);
-                }
+        ui.with_layout(
+            Layout::left_to_right(Align::Min),
+            |ui| {
+                // resize container
+                Resize::default()
+                    .default_size([150.0, 200.0])
+                    .max_size([300.0, 400.0])
+                    .show(ui, |ui| {
+                        if self.layout.main_wrap {
+                            if self.layout.main_dir.is_horizontal() {
+                                ui.allocate_ui(
+                                    vec2(ui.available_size_before_wrap().x, self.wrap_row_height),
+                                    |ui| ui.with_layout(self.layout, demo_ui),
+                                );
+                            } else {
+                                ui.allocate_ui(
+                                    vec2(self.wrap_column_width, ui.available_size_before_wrap().y),
+                                    |ui| ui.with_layout(self.layout, demo_ui),
+                                );
+                            }
+                        } else {
+                            ui.with_layout(self.layout, demo_ui);
+                        }
+                    });
+                // sroll area container
+                egui::ScrollArea::both()
+                    .auto_shrink([false, false])
+                    .max_width(300.)
+                    .max_height(400.)
+                    .show(ui, |ui| {
+                        ui.with_layout(self.layout, demo_ui);
+                });
+                // no container
+                ui.with_layout(self.layout, demo_ui);
             });
         ui.label("Resize to see effect");
 

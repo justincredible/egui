@@ -135,9 +135,8 @@ impl LayoutTest {
 }
 
 fn demo_ui(ui: &mut Ui) {
-    ui.add(egui::Label::new("Wrapping text followed by example widgets:").wrap());
-    let mut dummy = false;
-    ui.checkbox(&mut dummy, "checkbox");
-    ui.radio_value(&mut dummy, false, "radio");
-    let _ = ui.add(egui::Button::new("button").min_size([100.0, 100.0].into()));
+    for number in 1..=6 {
+        ui.add(egui::Label::new(format!("Label{number}")));
+        let _ = ui.add(egui::Button::new(format!("Button{number}")).min_size([100., 100.].into()));
+    }
 }

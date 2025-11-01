@@ -438,9 +438,11 @@ fn button_frame(
     let mut outer_rect = ui.available_rect_before_wrap();
     outer_rect.set_height(outer_rect.height().at_least(interact_size.y));
     let font_height = ui.text_style_height(&TextStyle::Button);
-    let mut center = outer_rect.center();
-    center.y -= (font_height - interact_size.y + margin.y) / 2.;
-    outer_rect.set_center(center);
+    if font_height > 14. {
+        let mut center = outer_rect.center();
+        center.y -= (font_height - interact_size.y + margin.y) / 2.;
+        outer_rect.set_center(center);
+    }
 
     let inner_rect = outer_rect.shrink2(margin);
     let mut content_ui = ui.new_child(UiBuilder::new().max_rect(inner_rect));

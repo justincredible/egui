@@ -235,6 +235,7 @@ impl ComboBox {
 
         let button_id = ui.make_persistent_id(id_salt);
 
+        let parent_horizontal_aligned = (ui.layout().is_horizontal(), ui.layout().cross_align);
         ui.horizontal(|ui| {
             let mut ir = combo_box_dyn(
                 ui,
@@ -246,6 +247,7 @@ impl ComboBox {
                 close_behavior,
                 popup_style,
                 (width, height),
+                parent_horizontal_aligned,
             );
             if let Some(label) = label {
                 ir.response.widget_info(|| {
@@ -329,6 +331,7 @@ fn combo_box_dyn<'c, R>(
     close_behavior: Option<PopupCloseBehavior>,
     popup_style: StyleModifier,
     (width, height): (Option<f32>, Option<f32>),
+    parent_horizontal_aligned: (bool, crate::Align),
 ) -> InnerResponse<Option<R>> {
     let popup_id = ComboBox::widget_to_popup_id(button_id);
 
@@ -339,7 +342,7 @@ fn combo_box_dyn<'c, R>(
     let close_behavior = close_behavior.unwrap_or(PopupCloseBehavior::CloseOnClick);
 
     let margin = ui.spacing().button_padding;
-    let button_response = button_frame(ui, button_id, is_popup_open, Sense::click(), |ui| {
+    let button_response = button_frame(ui, button_id, parent_horizontal_aligned, is_popup_open, Sense::click(), |ui| {
         let icon_spacing = ui.spacing().icon_spacing;
         let icon_size = Vec2::splat(ui.spacing().icon_width);
 
@@ -426,6 +429,7 @@ fn combo_box_dyn<'c, R>(
 fn button_frame(
     ui: &mut Ui,
     id: Id,
+    parent_horizontal_aligned: (bool, crate::Align),
     is_popup_open: bool,
     sense: Sense,
     add_contents: impl FnOnce(&mut Ui),
@@ -438,9 +442,14 @@ fn button_frame(
     let mut outer_rect = ui.available_rect_before_wrap();
     outer_rect.set_height(outer_rect.height().at_least(interact_size.y));
     let font_height = ui.text_style_height(&TextStyle::Button);
-    if font_height > crate::FontId::default().size {
+    if font_height > crate::FontId::default().size && parent_horizontal_aligned.0 {
+        let adjustment = match parent_horizontal_aligned.1 {
+            crate::Align::Min => 0.,
+            crate::Align::Center => (font_height - interact_size.y + 2. * margin.y) / 2.,
+            crate::Align::Max => font_height - interact_size.y + 2. * margin.y,
+        };
         let mut center = outer_rect.center();
-        center.y -= (font_height - interact_size.y + margin.y) / 2.;
+        center.y -= adjustment;
         outer_rect.set_center(center);
     }
 

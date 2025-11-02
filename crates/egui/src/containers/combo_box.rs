@@ -438,7 +438,7 @@ fn button_frame(
     let mut outer_rect = ui.available_rect_before_wrap();
     outer_rect.set_height(outer_rect.height().at_least(interact_size.y));
     let font_height = ui.text_style_height(&TextStyle::Button);
-    if font_height > 14. {
+    if font_height > crate::FontId::default().size {
         let mut center = outer_rect.center();
         center.y -= (font_height - interact_size.y + margin.y) / 2.;
         outer_rect.set_center(center);

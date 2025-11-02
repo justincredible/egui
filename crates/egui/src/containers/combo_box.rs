@@ -342,58 +342,67 @@ fn combo_box_dyn<'c, R>(
     let close_behavior = close_behavior.unwrap_or(PopupCloseBehavior::CloseOnClick);
 
     let margin = ui.spacing().button_padding;
-    let button_response = button_frame(ui, button_id, parent_horizontal_aligned, is_popup_open, Sense::click(), |ui| {
-        let icon_spacing = ui.spacing().icon_spacing;
-        let icon_size = Vec2::splat(ui.spacing().icon_width);
+    let button_response = button_frame(
+        ui,
+        button_id,
+        parent_horizontal_aligned,
+        is_popup_open,
+        Sense::click(),
+        |ui| {
+            let icon_spacing = ui.spacing().icon_spacing;
+            let icon_size = Vec2::splat(ui.spacing().icon_width);
 
-        // The combo box selected text will always have this minimum width.
-        // Note: the `ComboBox::width()` if set or `Spacing::combo_width` are considered as the
-        // minimum overall width, regardless of the wrap mode.
-        let minimum_width = width.unwrap_or_else(|| ui.spacing().combo_width) - 2.0 * margin.x;
+            // The combo box selected text will always have this minimum width.
+            // Note: the `ComboBox::width()` if set or `Spacing::combo_width` are considered as the
+            // minimum overall width, regardless of the wrap mode.
+            let minimum_width = width.unwrap_or_else(|| ui.spacing().combo_width) - 2.0 * margin.x;
 
-        // width against which to lay out the selected text
-        let wrap_width = if wrap_mode == TextWrapMode::Extend {
-            // Use all the width necessary to display the currently selected value's text.
-            f32::INFINITY
-        } else {
-            // Use the available width, currently selected value's text will be wrapped if exceeds this value.
-            ui.available_width() - icon_spacing - icon_size.x
-        };
-
-        let galley = selected_text.into_galley(ui, Some(wrap_mode), wrap_width, TextStyle::Button);
-
-        let actual_width = (galley.size().x + icon_spacing + icon_size.x).at_least(minimum_width);
-        let actual_height = galley.size().y.max(icon_size.y);
-
-        let (_, rect) = ui.allocate_space(Vec2::new(actual_width, actual_height));
-        let button_rect = ui.min_rect().expand2(ui.spacing().button_padding);
-        let response = ui.interact(button_rect, button_id, Sense::click());
-        // response.active |= is_popup_open;
-
-        if ui.is_rect_visible(rect) {
-            let icon_rect = Align2::RIGHT_CENTER.align_size_within_rect(icon_size, rect);
-            let visuals = if is_popup_open {
-                &ui.visuals().widgets.open
+            // width against which to lay out the selected text
+            let wrap_width = if wrap_mode == TextWrapMode::Extend {
+                // Use all the width necessary to display the currently selected value's text.
+                f32::INFINITY
             } else {
-                ui.style().interact(&response)
+                // Use the available width, currently selected value's text will be wrapped if exceeds this value.
+                ui.available_width() - icon_spacing - icon_size.x
             };
 
-            if let Some(icon) = icon {
-                icon(
-                    ui,
-                    icon_rect.expand(visuals.expansion),
-                    visuals,
-                    is_popup_open,
-                );
-            } else {
-                paint_default_icon(ui.painter(), icon_rect.expand(visuals.expansion), visuals);
-            }
+            let galley =
+                selected_text.into_galley(ui, Some(wrap_mode), wrap_width, TextStyle::Button);
 
-            let text_rect = Align2::LEFT_CENTER.align_size_within_rect(galley.size(), rect);
-            ui.painter()
-                .galley(text_rect.min, galley, visuals.text_color());
-        }
-    });
+            let actual_width =
+                (galley.size().x + icon_spacing + icon_size.x).at_least(minimum_width);
+            let actual_height = galley.size().y.max(icon_size.y);
+
+            let (_, rect) = ui.allocate_space(Vec2::new(actual_width, actual_height));
+            let button_rect = ui.min_rect().expand2(ui.spacing().button_padding);
+            let response = ui.interact(button_rect, button_id, Sense::click());
+            // response.active |= is_popup_open;
+
+            if ui.is_rect_visible(rect) {
+                let icon_rect = Align2::RIGHT_CENTER.align_size_within_rect(icon_size, rect);
+                let visuals = if is_popup_open {
+                    &ui.visuals().widgets.open
+                } else {
+                    ui.style().interact(&response)
+                };
+
+                if let Some(icon) = icon {
+                    icon(
+                        ui,
+                        icon_rect.expand(visuals.expansion),
+                        visuals,
+                        is_popup_open,
+                    );
+                } else {
+                    paint_default_icon(ui.painter(), icon_rect.expand(visuals.expansion), visuals);
+                }
+
+                let text_rect = Align2::LEFT_CENTER.align_size_within_rect(galley.size(), rect);
+                ui.painter()
+                    .galley(text_rect.min, galley, visuals.text_color());
+            }
+        },
+    );
 
     let height = height.unwrap_or_else(|| ui.spacing().combo_height);
 
@@ -445,7 +454,7 @@ fn button_frame(
     if font_height > crate::FontId::default().size && parent_horizontal_aligned.0 {
         let adjustment = match parent_horizontal_aligned.1 {
             crate::Align::Min => 0.,
-            crate::Align::Center => (font_height - interact_size.y + 2. * margin.y) / 2.,
+            crate::Align::Center => f32::midpoint(font_height - interact_size.y, 2. * margin.y),
             crate::Align::Max => font_height - interact_size.y + 2. * margin.y,
         };
         let mut center = outer_rect.center();

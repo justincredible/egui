@@ -1093,7 +1093,8 @@ impl Galley {
                 best_y_dist = y_dist;
                 // char_at is `Row` not `PlacedRow` relative which means we have to subtract the pos.
                 let column = row.char_at(pos.x - row.pos.x);
-                let prefer_next_row = column < row.char_count_excluding_newline();
+                let halign_column = row.char_at(pos.x - row.pos.x + self.rect.left());
+                let prefer_next_row = halign_column < row.char_count_excluding_newline();
                 cursor = CCursor {
                     index: ccursor_index + column,
                     prefer_next_row,

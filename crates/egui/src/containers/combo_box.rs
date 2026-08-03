@@ -231,32 +231,44 @@ impl ComboBox {
 
         let button_id = ui.make_persistent_id(id_salt);
 
-        ui.horizontal(|ui| {
-            let mut ir = combo_box_dyn(
-                ui,
-                button_id,
-                selected_text.clone(),
-                menu_contents,
-                icon,
-                wrap_mode,
-                close_behavior,
-                popup_style,
-                (width, height),
-            );
-            ir.response.widget_info(|| {
-                let mut info = WidgetInfo::new(WidgetType::ComboBox);
-                info.enabled = ui.is_enabled();
-                info.current_text_value = Some(selected_text.text().to_owned());
-                info
-            });
-            if let Some(label) = label {
-                let label_response = ui.label(label);
-                ir.response = ir.response.labelled_by(label_response.id);
-                ir.response |= label_response;
-            }
-            ir
-        })
-        .inner
+        // The combo box becomes misaligned for most layouts whenever
+        // interact height is less than 120% of the font size.
+        let interact_height = ui.spacing().interact_size.y;
+        let workaround = interact_height.max(1.2 * TextStyle::Button.resolve(ui.style()).size);
+        ui.style_mut().spacing.interact_size.y = workaround;
+
+        let inner_response = ui
+            .horizontal(|ui| {
+                let mut ir = combo_box_dyn(
+                    ui,
+                    button_id,
+                    selected_text.clone(),
+                    menu_contents,
+                    icon,
+                    wrap_mode,
+                    close_behavior,
+                    popup_style,
+                    (width, height),
+                );
+                ir.response.widget_info(|| {
+                    let mut info = WidgetInfo::new(WidgetType::ComboBox);
+                    info.enabled = ui.is_enabled();
+                    info.current_text_value = Some(selected_text.text().to_owned());
+                    info
+                });
+                if let Some(label) = label {
+                    let label_response = ui.label(label);
+                    ir.response = ir.response.labelled_by(label_response.id);
+                    ir.response |= label_response;
+                }
+                ir
+            })
+            .inner;
+
+        // Restore the modified style
+        ui.style_mut().spacing.interact_size.y = interact_height;
+
+        inner_response
     }
 
     /// Show a list of items with the given selected index.
